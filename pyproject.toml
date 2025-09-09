@@ -1,0 +1,41 @@
+[tool.poetry]
+name = "product-tracker"
+version = "0.1.0"
+description = "A FastAPI-based product tracker system with web scraping capabilities"
+authors = ["Your Name <rodrigo.vidal.hq@gmail.com>"]
+readme = "README.md"
+package-mode = false
+
+
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.116.1"
+uvicorn = "^0.35.0"
+pydantic = "^2.11.7"
+pydantic-settings = "^2.10.1"
+sqlalchemy = "^2.0.43"
+alembic = "^1.16.5"
+
+
+[tool.poetry.group.dev.dependencies]
+uvicorn = "^0.35.0"
+black = "^25.1.0"
+isort = "^6.0.1"
+
+[tool.black]
+line-length = 79
+target-version = ['py39']
+exclude = '''
+/(
+    \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 88
+multi_line_output = 3
+include_trailing_comma = true

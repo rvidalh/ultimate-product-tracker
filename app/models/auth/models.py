@@ -1,44 +1,51 @@
+from datetime import datetime
+from typing import Optional
+
 from sqlalchemy import (
     Boolean,
-    Column,
     DateTime,
     ForeignKey,
     Integer,
     String,
     Text,
+    UniqueConstraint,
 )
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
-Base = declarative_base()
+from app.models.base import BaseModel, TimestampMixin
 
 
-class User(Base):
+class User(BaseModel, TimestampMixin):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String(255), unique=True, index=True, nullable=False)
-    username = Column(String(100), unique=True, index=True, nullable=True)
-    full_name = Column(String(255), nullable=True)
-    hashed_password = Column(
+    email: Mapped[str] = mapped_column(
+        String(255), unique=True, index=True, nullable=False
+    )
+    username: Mapped[Optional[str]] = mapped_column(
+        String(100), unique=True, index=True, nullable=True
+    )
+    full_name: Mapped[Optional[str]] = mapped_column(
+        String(255), nullable=True
+    )
+    hashed_password: Mapped[Optional[str]] = mapped_column(
         String(255), nullable=True
     )  # Nullable for OAuth users
-    is_active = Column(Boolean, default=True)
-    is_verified = Column(Boolean, default=False)
-    is_superuser = Column(Boolean, default=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
 
     # Profile information
-    avatar_url = Column(String(500), nullable=True)
-    bio = Column(Text, nullable=True)
-    phone = Column(String(20), nullable=True)
+    avatar_url: Mapped[Optional[str]] = mapped_column(
+        String(500), nullable=True
+    )
+    bio: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
 
-    # Timestamps
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    last_login = Column(DateTime(timezone=True), nullable=True)
+    last_login: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
-    # Relationships
     oauth_accounts = relationship(
         "OAuthAccount", back_populates="user", cascade="all, delete-orphan"
     )
@@ -50,141 +57,138 @@ class User(Base):
     )
 
 
-class OAuthAccount(Base):
+class OAuthAccount(BaseModel, TimestampMixin):
     __tablename__ = "oauth_accounts"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    provider = Column(
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=False
+    )
+    provider: Mapped[str] = mapped_column(
         String(50), nullable=False
     )  # google, github, facebook, etc.
-    provider_user_id = Column(
+    provider_user_id: Mapped[str] = mapped_column(
         String(255), nullable=False
     )  # ID from OAuth provider
-    provider_email = Column(String(255), nullable=True)
-    provider_username = Column(String(255), nullable=True)
-    access_token = Column(Text, nullable=True)  # OAuth provider access token
-    refresh_token = Column(Text, nullable=True)  # OAuth provider refresh token
-    token_expires_at = Column(DateTime(timezone=True), nullable=True)
-
-    # Timestamps
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-
-    # Relationships
+    provider_email: Mapped[Optional[str]] = mapped_column(
+        String(255), nullable=True
+    )
+    provider_username: Mapped[Optional[str]] = mapped_column(
+        String(255), nullable=True
+    )
+    access_token: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True
+    )  # OAuth provider access token
+    refresh_token: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True
+    )  # OAuth provider refresh token
+    token_expires_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     user = relationship("User", back_populates="oauth_accounts")
 
     # Unique constraint for provider + provider_user_id
-    __table_args__ = ({"sqlite_autoincrement": True},)
+    __table_args__ = (
+        UniqueConstraint(
+            "provider", "provider_user_id", name="uq_oauth_provider_user"
+        ),
+    )
 
 
-class RefreshToken(Base):
+class RefreshToken(BaseModel, TimestampMixin):
     __tablename__ = "refresh_tokens"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    token = Column(String(255), unique=True, index=True, nullable=False)
-    expires_at = Column(DateTime(timezone=True), nullable=False)
-    is_revoked = Column(Boolean, default=False)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=False
+    )
+    token: Mapped[str] = mapped_column(
+        String(255), unique=True, index=True, nullable=False
+    )
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    is_revoked: Mapped[bool] = mapped_column(Boolean, default=False)
 
     # Device/session tracking
-    device_info = Column(String(255), nullable=True)
-    ip_address = Column(String(45), nullable=True)  # IPv6 compatible
-    user_agent = Column(Text, nullable=True)
+    device_info: Mapped[Optional[str]] = mapped_column(
+        String(255), nullable=True
+    )
+    ip_address: Mapped[Optional[str]] = mapped_column(
+        String(45), nullable=True
+    )  # IPv6 compatible
+    user_agent: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
-    # Timestamps
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    revoked_at = Column(DateTime(timezone=True), nullable=True)
-
-    # Relationships
     user = relationship("User", back_populates="refresh_tokens")
 
 
-class Role(Base):
+class Role(BaseModel, TimestampMixin):
     __tablename__ = "roles"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(50), unique=True, nullable=False)
-    description = Column(Text, nullable=True)
-    is_active = Column(Boolean, default=True)
-
-    # Timestamps
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-
-    # Relationships
+    name: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     user_roles = relationship("UserRole", back_populates="role")
     role_permissions = relationship(
         "RolePermission", back_populates="role", cascade="all, delete-orphan"
     )
 
 
-class Permission(Base):
+class Permission(BaseModel, TimestampMixin):
     __tablename__ = "permissions"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), unique=True, nullable=False)
-    description = Column(Text, nullable=True)
-    resource = Column(
-        String(50), nullable=True
-    )  # e.g., 'users', 'posts', 'admin'
-    action = Column(
-        String(50), nullable=True
-    )  # e.g., 'read', 'write', 'delete'
-
-    # Timestamps
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-
-    # Relationships
+    name: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    resource: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    action: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     role_permissions = relationship(
         "RolePermission", back_populates="permission"
     )
 
 
-class UserRole(Base):
+class UserRole(BaseModel, TimestampMixin):
     __tablename__ = "user_roles"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    role_id = Column(Integer, ForeignKey("roles.id"), nullable=False)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=False
+    )
+    role_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("roles.id"), nullable=False
+    )
 
-    # Timestamps
-    assigned_at = Column(DateTime(timezone=True), server_default=func.now())
-    assigned_by = Column(Integer, ForeignKey("users.id"), nullable=True)
-
-    # Relationships
+    assigned_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    assigned_by: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=True
+    )
     user = relationship("User", back_populates="user_roles")
     role = relationship("Role", back_populates="user_roles")
 
 
-class RolePermission(Base):
+class RolePermission(BaseModel, TimestampMixin):
     __tablename__ = "role_permissions"
 
-    id = Column(Integer, primary_key=True, index=True)
-    role_id = Column(Integer, ForeignKey("roles.id"), nullable=False)
-    permission_id = Column(
+    role_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("roles.id"), nullable=False
+    )
+    permission_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("permissions.id"), nullable=False
     )
-
-    # Timestamps
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-
-    # Relationships
-    role = relationship("Role", back_populates="role_permissions")
-    permission = relationship("Permission", back_populates="role_permissions")
+    role: Mapped["Role"] = relationship(back_populates="role_permissions")
+    permission: Mapped["Permission"] = relationship(
+        back_populates="role_permissions"
+    )
 
 
-class LoginAttempt(Base):
+class LoginAttempt(BaseModel, TimestampMixin):
     __tablename__ = "login_attempts"
 
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String(255), nullable=False, index=True)
-    ip_address = Column(String(45), nullable=False)
-    user_agent = Column(Text, nullable=True)
-    success = Column(Boolean, default=False)
-    failure_reason = Column(
+    email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    ip_address: Mapped[str] = mapped_column(String(45), nullable=False)
+    user_agent: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    success: Mapped[bool] = mapped_column(Boolean, default=False)
+    failure_reason: Mapped[Optional[str]] = mapped_column(
         String(100), nullable=True
-    )  # wrong_password, user_not_found, etc.
-
-    # Timestamps
-    attempted_at = Column(DateTime(timezone=True), server_default=func.now())
+    )
+    attempted_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )

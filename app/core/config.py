@@ -3,6 +3,7 @@ Core configuration settings for the Product Tracker application
 """
 
 import os
+from functools import lru_cache
 from pathlib import Path
 
 from pydantic import computed_field
@@ -21,6 +22,11 @@ class Settings(BaseSettings):
     db_user: str
     db_password: str
     db_name: str
+    db_pool_size: int
+    db_max_overflow: int
+    db_pool_timeout: int
+    db_pool_recycle: int
+    db_pool_pre_ping: bool
     # redis_url: str
 
     # JWT Configuration
@@ -46,8 +52,10 @@ class Settings(BaseSettings):
     @computed_field
     @property
     def database_url(self) -> str:
-        return f"postgresql://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"  # noqa E501
+        return f"postgresql+psycopg://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"  # noqa E501
 
 
-# Create settings instance
-settings = Settings()  # type: ignore
+@lru_cache()
+def get_settings() -> Settings:
+    """Get application settings with caching"""
+    return Settings()  # type: ignore

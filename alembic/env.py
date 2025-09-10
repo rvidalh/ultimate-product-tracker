@@ -6,12 +6,16 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 
 from alembic import context
-from app.core.config import settings
+from app.core.config import get_settings
 from app.db.base import Base
+
+# App Models
+from app.models.auth import *  # noqa: F401, F403
 
 # Add your app directory to Python path
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "app"))
 
+settings = get_settings()
 
 # this is the Alembic Config object
 config = context.config

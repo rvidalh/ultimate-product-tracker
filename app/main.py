@@ -3,9 +3,10 @@ from typing import Union
 import uvicorn
 from fastapi import FastAPI
 
-from app.core.config import settings
+from app.core.config import get_settings
 
 app = FastAPI()
+settings = get_settings()
 
 
 @app.get("/health", response_model=dict[str, Union[str, bool]])

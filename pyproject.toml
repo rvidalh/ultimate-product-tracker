@@ -16,6 +16,8 @@ pydantic = "^2.11.7"
 pydantic-settings = "^2.10.1"
 sqlalchemy = "^2.0.43"
 alembic = "^1.16.5"
+pyjwt = "^2.10.1"
+psycopg = {extras = ["binary"], version = "^3.2.10"}
 
 
 [tool.poetry.group.dev.dependencies]

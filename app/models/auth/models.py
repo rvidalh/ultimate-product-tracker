@@ -34,6 +34,9 @@ class User(BaseModel, TimestampMixin):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_external_auth: Mapped[bool] = mapped_column(
+        Boolean, default=False
+    )  # Indicates if the user uses external authentication (OAuth)
 
     # Profile information
     avatar_url: Mapped[Optional[str]] = mapped_column(

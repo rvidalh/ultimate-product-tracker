@@ -3,9 +3,14 @@ from typing import Union
 import uvicorn
 from fastapi import FastAPI
 
+from app.api.v1.endpoints import auth
 from app.core.config import get_settings
 
 app = FastAPI()
+
+# Register routers
+app.include_router(auth.router)
+
 settings = get_settings()
 
 

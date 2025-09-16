@@ -1,3 +1,4 @@
+import logging
 from typing import Union
 
 import uvicorn
@@ -12,6 +13,9 @@ app = FastAPI()
 app.include_router(auth.router)
 
 settings = get_settings()
+
+
+logging.getLogger("passlib").setLevel(logging.ERROR)
 
 
 @app.get("/health", response_model=dict[str, Union[str, bool]])

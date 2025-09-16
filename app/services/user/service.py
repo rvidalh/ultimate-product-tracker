@@ -12,7 +12,9 @@ class UserService:
 
     async def create_user(self, user: CreateUserSchema) -> User:
         user_data = user.model_dump()
-        user_data["password"] = Security.hash_password(user_data["password"])
+        user_data["hashed_password"] = Security.hash_password(
+            user_data["hashed_password"]
+        )
         return await self.auth_repo.create(User(**user_data))
 
     async def get_user_by_email(self, email: str) -> User | None:

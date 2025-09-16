@@ -1,3 +1,3 @@
-from app.schemas.auth.schemas import CreateUserSchema
+from app.schemas.auth.schemas import CreateUserSchema, LoginSchema, UserSchema
 
-__all__ = ["CreateUserSchema"]
+__all__ = ["CreateUserSchema", "LoginSchema", "UserSchema"]

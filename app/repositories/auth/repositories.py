@@ -2,7 +2,7 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from app.db.base import get_db
-from app.models.auth import User
+from app.models.auth import Role, User, UserRole
 from app.repositories.auth.protocols import AuthProtocol
 
 
@@ -58,10 +58,26 @@ class SqlAlchemyAuthRepository(AuthProtocol):
             sqlalchemy.exc.SQLAlchemyError: If there is an error during the
             database operation.
         """
-        self.session.add(user)
-        self.session.commit()
-        self.session.refresh(user)
-        return user
+        try:
+            user_role = (
+                self.session.query(Role).filter(Role.name == "user").first()
+            )
+            if not user_role:
+                raise ValueError("Default 'user' role not found in database")
+
+            self.session.add(user)
+            self.session.flush()
+
+            user_role_association = UserRole(
+                user_id=user.id, role_id=user_role.id
+            )
+            self.session.add(user_role_association)
+            self.session.commit()
+            self.session.refresh(user)
+            return user
+        except Exception as e:
+            self.session.rollback()
+            raise e
 
     async def update(self, user: User) -> User:
         """

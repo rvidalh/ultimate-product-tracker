@@ -30,15 +30,11 @@ class User(BaseModel, TimestampMixin):
     )
     hashed_password: Mapped[Optional[str]] = mapped_column(
         String(255), nullable=True
-    )  # Nullable for OAuth users
+    )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
-    is_external_auth: Mapped[bool] = mapped_column(
-        Boolean, default=False
-    )  # Indicates if the user uses external authentication (OAuth)
-
-    # Profile information
+    is_external_auth: Mapped[bool] = mapped_column(Boolean, default=False)
     avatar_url: Mapped[Optional[str]] = mapped_column(
         String(500), nullable=True
     )
@@ -66,30 +62,21 @@ class OAuthAccount(BaseModel, TimestampMixin):
     user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id"), nullable=False
     )
-    provider: Mapped[str] = mapped_column(
-        String(50), nullable=False
-    )  # google, github, facebook, etc.
-    provider_user_id: Mapped[str] = mapped_column(
-        String(255), nullable=False
-    )  # ID from OAuth provider
+    provider: Mapped[str] = mapped_column(String(50), nullable=False)
+    provider_user_id: Mapped[str] = mapped_column(String(255), nullable=False)
     provider_email: Mapped[Optional[str]] = mapped_column(
         String(255), nullable=True
     )
     provider_username: Mapped[Optional[str]] = mapped_column(
         String(255), nullable=True
     )
-    access_token: Mapped[Optional[str]] = mapped_column(
-        Text, nullable=True
-    )  # OAuth provider access token
-    refresh_token: Mapped[Optional[str]] = mapped_column(
-        Text, nullable=True
-    )  # OAuth provider refresh token
+    access_token: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    refresh_token: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     token_expires_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
     user = relationship("User", back_populates="oauth_accounts")
 
-    # Unique constraint for provider + provider_user_id
     __table_args__ = (
         UniqueConstraint(
             "provider", "provider_user_id", name="uq_oauth_provider_user"
@@ -117,7 +104,7 @@ class RefreshToken(BaseModel, TimestampMixin):
     )
     ip_address: Mapped[Optional[str]] = mapped_column(
         String(45), nullable=True
-    )  # IPv6 compatible
+    )
     user_agent: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     user = relationship("User", back_populates="refresh_tokens")
@@ -160,11 +147,12 @@ class UserRole(BaseModel, TimestampMixin):
     assigned_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
-    assigned_by: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("users.id"), nullable=True
-    )
     user = relationship("User", back_populates="user_roles")
     role = relationship("Role", back_populates="user_roles")
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "role_id", name="uq_user_role"),
+    )
 
 
 class RolePermission(BaseModel, TimestampMixin):
@@ -179,6 +167,12 @@ class RolePermission(BaseModel, TimestampMixin):
     role: Mapped["Role"] = relationship(back_populates="role_permissions")
     permission: Mapped["Permission"] = relationship(
         back_populates="role_permissions"
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "role_id", "permission_id", name="uq_role_permission"
+        ),
     )
 
 

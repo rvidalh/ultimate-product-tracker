@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     db_pool_timeout: int
     db_pool_recycle: int
     db_pool_pre_ping: bool
+    db_debug: bool
     # redis_url: str
 
     # JWT Configuration

@@ -1,13 +1,18 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class CreateUserSchema(BaseModel):
+    """Schema for creating a new user"""
+
     email: EmailStr
-    password: str
+    username: Optional[str] = None
+    hashed_password: str = Field(alias="password")
     full_name: Optional[str] = None
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class UserSchema(BaseModel):
@@ -22,3 +27,10 @@ class UserSchema(BaseModel):
     last_login: datetime | None = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class LoginSchema(BaseModel):
+    """Schema for user login"""
+
+    email: EmailStr
+    password: str

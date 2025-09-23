@@ -16,9 +16,10 @@ pydantic = {extras = ["email"], version = "^2.11.7"}
 pydantic-settings = "^2.10.1"
 sqlalchemy = "^2.0.43"
 alembic = "^1.16.5"
-pyjwt = "^2.10.1"
 psycopg = {extras = ["binary"], version = "^3.2.10"}
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+python-jose = {extras = ["cryptography"], version = "^3.5.0"}
+python-multipart = "^0.0.20"
 
 
 [tool.poetry.group.dev.dependencies]

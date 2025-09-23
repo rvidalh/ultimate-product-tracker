@@ -2,7 +2,12 @@ from fastapi import Depends
 
 from app.core.exceptions import EmailAlreadyExistsException
 from app.models.auth import User
-from app.schemas.auth.schemas import CreateUserSchema, LoginSchema
+from app.schemas.auth.schemas import (
+    CreateUserSchema,
+    LoginSchema,
+    TokenDataSchema,
+    TokenSchema,
+)
 from app.services.user.service import UserService, get_user_service
 from app.utils.security import Security
 
@@ -12,7 +17,6 @@ class AuthService:
         self.user_service = user_service
 
     async def register_user(self, user_data: CreateUserSchema) -> User:
-        # Example method to register a user
         existing_user = await self.user_service.get_user_by_email(
             email=user_data.email
         )
@@ -31,6 +35,18 @@ class AuthService:
         ):
             return user
         return None
+
+    async def create_token(self, user: User) -> TokenSchema:
+        token_data = {"sub": user.email}
+        access_token = Security.create_access_token(data=token_data)
+        return TokenSchema(access_token=access_token, token_type="bearer")
+
+    async def get_current_user(
+        self, token: dict = Depends(Security.verify_token)
+    ) -> TokenDataSchema:
+        payload = token
+        email: str | None = payload.get("sub", None)
+        return TokenDataSchema(email=email)
 
 
 def get_auth_service(

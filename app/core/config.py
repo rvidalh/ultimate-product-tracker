@@ -31,10 +31,10 @@ class Settings(BaseSettings):
     # redis_url: str
 
     # JWT Configuration
-    # jwt_secret_key: str
-    # jwt_algorithm: str
-    # jwt_access_token_expire_minutes: int
-    # jwt_refresh_token_expire_days: int
+    jwt_secret_key: str
+    jwt_algorithm: str
+    jwt_access_token_expire_minutes: int
+    jwt_refresh_token_expire_days: int
 
     # Environment
     app_name: str
